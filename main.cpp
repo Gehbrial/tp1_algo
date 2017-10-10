@@ -36,9 +36,9 @@ int main()
 
     donnees_rtc.afficherLignes();
     donnees_rtc.afficherStations();
-    donnees_rtc.afficherTransferts();
-    donnees_rtc.afficherArretsParVoyages();
-    donnees_rtc.afficherArretsParStations();
+//    donnees_rtc.afficherTransferts();
+//    donnees_rtc.afficherArretsParVoyages();
+//    donnees_rtc.afficherArretsParStations();
 
     return 0;
 }

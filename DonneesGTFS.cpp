@@ -37,6 +37,35 @@ vector<string> DonneesGTFS::string_to_vector(const string &s, char delim)
 //! \throws logic_error si un problème survient avec la lecture du fichier
 void DonneesGTFS::ajouterLignes(const std::string &p_nomFichier)
 {
+    ifstream file(p_nomFichier);
+
+    if(file.good()) {
+        string line;
+        getline(file, line);
+
+        vector<string> headers = string_to_vector(line, ',');
+        std::unordered_map<string, unsigned int> headers_map;
+
+        for(unsigned int i = 0; i < headers.size(); i++) {
+            headers_map[headers[i]] = i;
+        }
+
+        for(line; getline(file, line);)
+        {
+            line.erase(std::remove(line.begin(), line.end(), '"'), line.end());
+            vector<string> champs = string_to_vector(line, ',');
+
+            Ligne ligne(
+                    (unsigned) stoi(champs[headers_map.at("route_id")]),
+                    champs[headers_map.at("route_short_name")],
+                    champs[headers_map.at("route_desc")],
+                    Ligne::couleurToCategorie(champs[headers_map.at("route_color")])
+            );
+
+            this->m_lignes.insert({ligne.getId(), ligne});
+            this->m_lignes_par_numero.insert({ligne.getNumero(), ligne});
+        }
+    }
 }
 
 //! \brief ajoute les stations dans l'objet GTFS
@@ -44,6 +73,36 @@ void DonneesGTFS::ajouterLignes(const std::string &p_nomFichier)
 //! \throws logic_error si un problème survient avec la lecture du fichier
 void DonneesGTFS::ajouterStations(const std::string &p_nomFichier)
 {
+    ifstream file(p_nomFichier);
+
+    if(file.good()) {
+        string line;
+        getline(file, line);
+
+        vector<string> headers = string_to_vector(line, ',');
+        std::unordered_map<string, unsigned int> headers_map;
+
+        for(unsigned int i = 0; i < headers.size(); i++) {
+            headers_map[headers[i]] = i;
+        }
+
+        for(line; getline(file, line);)
+        {
+            line.erase(std::remove(line.begin(), line.end(), '"'), line.end());
+            vector<string> champs = string_to_vector(line, ',');
+
+            Coordonnees coord(stod(champs[headers_map.at("stop_lat")]), stod(champs[headers_map.at("stop_lon")]));
+
+            Station station(
+                    (unsigned) stoi(champs[headers_map.at("stop_id")]),
+                    champs[headers_map.at("stop_name")],
+                    champs[headers_map.at("stop_desc")],
+                    coord
+            );
+
+            this->m_stations.insert({station.getId(), station});
+        }
+    }
 }
 
 //! \brief ajoute les transferts dans l'objet GTFS
@@ -63,6 +122,36 @@ void DonneesGTFS::ajouterTransferts(const std::string &p_nomFichier)
 //! \throws logic_error si un problème survient avec la lecture du fichier
 void DonneesGTFS::ajouterServices(const std::string &p_nomFichier)
 {
+    ifstream file(p_nomFichier);
+
+    if(file.good()) {
+        string line;
+        getline(file, line);
+
+        vector<string> headers = string_to_vector(line, ',');
+        std::unordered_map<string, unsigned int> headers_map;
+
+        for(unsigned int i = 0; i < headers.size(); i++) {
+            headers_map[headers[i]] = i;
+        }
+
+        for(line; getline(file, line);)
+        {
+            line.erase(std::remove(line.begin(), line.end(), '"'), line.end());
+            vector<string> champs = string_to_vector(line, ',');
+
+            string str_date = champs[headers_map.at("date")];
+            Date date(
+                    (unsigned) stoi(str_date.substr(0, 4)),
+                    (unsigned) stoi(str_date.substr(4, 2)),
+                    (unsigned) stoi(str_date.substr(6, 2))
+            );
+
+            if(stoi(champs[headers_map.at("exception_type")]) == 1 && this->m_date == date) {
+                this->m_services.insert({champs[headers_map.at("service_id")]});
+            }
+        }
+    }
 }
 
 //! \brief ajoute les voyages de la date
@@ -71,6 +160,40 @@ void DonneesGTFS::ajouterServices(const std::string &p_nomFichier)
 //! \throws logic_error si un problème survient avec la lecture du fichier
 void DonneesGTFS::ajouterVoyagesDeLaDate(const std::string &p_nomFichier)
 {
+    ifstream file(p_nomFichier);
+
+    if(file.good()) {
+        string line;
+        getline(file, line);
+
+        vector<string> headers = string_to_vector(line, ',');
+        std::unordered_map<string, unsigned int> headers_map;
+
+        for(unsigned int i = 0; i < headers.size(); i++) {
+            headers_map[headers[i]] = i;
+        }
+
+        for(line; getline(file, line);)
+        {
+            line.erase(std::remove(line.begin(), line.end(), '"'), line.end());
+            vector<string> champs = string_to_vector(line, ',');
+
+            string service_id = champs[headers_map.at("service_id")];
+
+            if(this->m_services.count(service_id)) {
+                string trip_id = champs[headers_map.at("trip_id")];
+
+                Voyage voyage = Voyage(
+                        trip_id,
+                        (unsigned) stoi(champs[headers_map.at("route_id")]),
+                        service_id,
+                        champs[headers_map.at("trip_headsign")]
+                );
+
+                this->m_voyages.insert({trip_id, voyage});
+            }
+        }
+    }
 }
 
 //! \brief ajoute les arrets aux voyages présents dans le GTFS si l'heure du voyage appartient à l'intervalle de temps du GTFS
@@ -81,6 +204,79 @@ void DonneesGTFS::ajouterVoyagesDeLaDate(const std::string &p_nomFichier)
 //! \throws logic_error si un problème survient avec la lecture du fichier
 void DonneesGTFS::ajouterArretsDesVoyagesDeLaDate(const std::string &p_nomFichier)
 {
+    ifstream file(p_nomFichier);
+
+    if(file.good()) {
+        string line;
+        getline(file, line);
+
+        vector<string> headers = string_to_vector(line, ',');
+        std::unordered_map<string, unsigned int> headers_map;
+
+        for(unsigned int i = 0; i < headers.size(); i++) {
+            headers_map[headers[i]] = i;
+        }
+
+        for(line; getline(file, line);)
+        {
+            line.erase(std::remove(line.begin(), line.end(), '"'), line.end());
+            vector<string> champs = string_to_vector(line, ',');
+
+            string trip_id = champs[headers_map.at("trip_id")];
+
+            if(this->m_voyages.count(trip_id)) {
+                string arrival_time = champs[headers_map.at("arrival_time")];
+                string departure_time = champs[headers_map.at("departure_time")];
+
+                vector<unsigned int> arrival_tokens;
+                vector<unsigned int> departure_tokens;
+
+                string buffer;
+
+                stringstream atss(arrival_time);
+                while (std::getline(atss, buffer, ':')) {
+                    arrival_tokens.push_back((unsigned) stoi(buffer));
+                }
+
+                stringstream dtss(departure_time);
+                while (std::getline(dtss, buffer, ':')) {
+                    departure_tokens.push_back((unsigned) stoi(buffer));
+                }
+
+                Heure *arrival_hour = new Heure(arrival_tokens[0], arrival_tokens[1], arrival_tokens[2]);
+                Heure *departure_hour = new Heure(departure_tokens[0], departure_tokens[1], departure_tokens[2]);
+
+                if(*arrival_hour >= this->m_now1 && *departure_hour < this->m_now2) {
+                    Arret::Ptr a_ptr = make_shared<Arret>(
+                            (unsigned) stoi(champs[headers_map.at("stop_id")]),
+                            *arrival_hour,
+                            *departure_hour,
+                            (unsigned) stoi(champs[headers_map.at("stop_sequence")]),
+                            trip_id
+                    );
+
+                    this->m_voyages[trip_id].ajouterArret(a_ptr);
+                }
+            }
+        }
+
+        auto it = this->m_voyages.begin();
+
+        while(it != this->m_voyages.end()) {
+            if(it->second.getArrets().empty()) {
+                it = this->m_voyages.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        it = this->m_voyages.begin();
+
+        while(it != this->m_voyages.end()) {
+            // Pour chaque arrêt dans m_voyages,
+            // ajoutez une copie du Arret::Ptr aux arrêts de la station de m_station concernée par cet arrêt
+        }
+    }
 }
 
 unsigned int DonneesGTFS::getNbArrets() const
