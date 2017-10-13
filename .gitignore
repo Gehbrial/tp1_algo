@@ -1,8 +1,6 @@
-# Clion
 .idea/
-
-# Data repository
 data/
+*.pdf
 
 # CMake debugging
 cmake-build-debug/

@@ -14,10 +14,7 @@ int main()
 
     Date today(2017, 8, 18);
     Heure now1(8, 30, 0);
-//    Date today; //Le constructeur par défaut initialise la date à aujourd'hui
-//    Heure now1; //Le constructeur par défaut initialise l'heure à maintenant
     Heure now2 = now1.add_secondes(3600);
-
     DonneesGTFS donnees_rtc(today, now1, now2);
 
     donnees_rtc.ajouterLignes(chemin_dossier + "/routes.txt");
@@ -32,13 +29,13 @@ int main()
     donnees_rtc.ajouterTransferts(chemin_dossier + "/transfers.txt");
     cout << "Nombre de transferts = " << donnees_rtc.getNbTransferts() << endl;
     cout << "Nombres de voyages = " << donnees_rtc.getNbVoyages() << endl;
-    cout << "Nombre d'arrets = " << donnees_rtc.getNbArrets() << endl << endl;
+    cout << "Nombre d'arrets = " << donnees_rtc.getNbArrets() << endl;
 
     donnees_rtc.afficherLignes();
     donnees_rtc.afficherStations();
-//    donnees_rtc.afficherTransferts();
-//    donnees_rtc.afficherArretsParVoyages();
-//    donnees_rtc.afficherArretsParStations();
+    donnees_rtc.afficherTransferts();
+    donnees_rtc.afficherArretsParVoyages();
+    donnees_rtc.afficherArretsParStations();
 
     return 0;
 }
