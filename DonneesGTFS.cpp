@@ -300,18 +300,14 @@ void DonneesGTFS::ajouterArretsDesVoyagesDeLaDate(const std::string &p_nomFichie
                     vector<unsigned int> arrival_tokens;
                     vector<unsigned int> departure_tokens;
 
-                    string buffer;
-
                     // On récupère les différentes partie de l'heure d'arrivée
-                    stringstream atss(arrival_time);
-                    while (std::getline(atss, buffer, ':')) {
-                        arrival_tokens.push_back((unsigned) stoi(buffer));
+                    for(string &token : string_to_vector(champs[headers_map.at("arrival_time")], ':')) {
+                        arrival_tokens.push_back((unsigned) stoi(token));
                     }
 
                     // On récupère les différentes partie de l'heure de départ
-                    stringstream dtss(departure_time);
-                    while (std::getline(dtss, buffer, ':')) {
-                        departure_tokens.push_back((unsigned) stoi(buffer));
+                    for(string &token : string_to_vector(champs[headers_map.at("departure_time")], ':')) {
+                        departure_tokens.push_back((unsigned) stoi(token));
                     }
 
                     Heure *arrival_hour = new Heure(arrival_tokens[0], arrival_tokens[1], arrival_tokens[2]);
